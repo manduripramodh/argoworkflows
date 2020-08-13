@@ -83,7 +83,7 @@ class ExplainableAI:
         metrics_dict = {"kpi": "1"}
         pprint("Entered Explanation generation step")
         # Importing the data
-        df = pd.read_csv("/german_credit_data.csv", index_col=0)
+        df = pd.read_csv("german_credit_data.csv", index_col=0)
 
         df_good = df.loc[df["Risk"] == 'good']['Age'].values.tolist()
         df_bad = df.loc[df["Risk"] == 'bad']['Age'].values.tolist()
@@ -151,7 +151,7 @@ class ExplainableAI:
         self.y_train = y_train
         isGenerateExplainerEnabled = True
         if isGenerateExplainerEnabled == True:
-            json_config = '/basic-report-explainable.json'
+            json_config = 'basic-report-explainable.json'
             controller = Controller(config=Configuration(json_config, locals()))
             pprint(controller.config)
             controller.render()
