@@ -1,0 +1,321 @@
+swagger: '2.0'
+info:
+  description: |
+    API for Explainable AI
+  version: 0.1.0
+  title: Explainable AI
+  contact: {}
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: explainableai
+
+basePath: /api/v1
+
+### ***  *****************************************************  *** ###
+### ***  ***                Start of paths                 ***  *** ###
+### ***  *****************************************************  *** ###
+paths:
+
+  ### ###  ########################  ### ###
+  ### ###  ###      Healthz     ###  ### ###
+  ### ###  ########################  ### ###
+  /healthz:
+    get:
+      tags:
+        - healthz
+      summary: Check health of Explainable AI
+      operationId: server.Server.healthz
+      responses:
+        '200':
+          description: Explainable AI API ready
+          schema:
+            $ref: '#/definitions/HealthStatus'
+        '503':
+          description: Explainable AI API not ready
+          schema:
+            $ref: '#/definitions/HealthStatus'
+
+  ### ###  ########################  ### ###
+  ### ###  ###      create     ###  ### ###
+  ### ###  ########################  ### ###
+  /create:
+    post:
+      summary: Create a global explanation report
+      tags:
+        - explainableai
+      operationId: explainableai.create
+      parameters:
+        - name: run
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ConfigParams'
+      responses:
+        '200':
+          description: Done
+          schema:
+            $ref: '#/definitions/CreateReportStatus'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+  ### ###  ########################  ### ###
+  ### ###  ###      Inference Request     ###  ### ###
+  ### ###  ########################  ### ###
+  /inference:
+    post:
+      summary: Get the Inference Values
+      tags:
+        - explainableai
+      operationId: explainableai.inference
+      parameters:
+        - name: run
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/InferenceRequest'
+      responses:
+        '200':
+          description: Done
+          schema:
+            type: object
+            allOf:
+            - $ref: '#/definitions/InferenceResponse'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+
+### ***  *****************************************************  *** ###
+### ***  ***             Start of definitions              ***  *** ###
+### ***  *****************************************************  *** ###
+definitions:
+
+  ### ###  ########################  ### ###
+  ### ###  ###      Parameters      ###  ### ###
+  ### ###  ########################  ### ###
+
+  InferenceResponse:
+    allOf:
+    - type: object
+
+  ConfigParams:
+    type: object
+    required:
+      - learningType
+      - datasetType
+      - featureImportanceEnabled
+      - limeStrategy
+    properties:
+      learningType:
+        type: string
+        example: 'Classification or Regression'
+      datasetType:
+        type: string
+        example: 'Tabular or Text'
+      featureImportanceEnabled:
+        type: boolean
+      limeStrategy:
+        type: string
+        example: 'Average_Score or Top_K or Average_Ranking'
+      additionalParamters:
+        $ref: '#/definitions/AdditionalParams'
+
+  InferenceRequest:
+    type: object
+    required:
+      - learningType
+      - datasetType
+      - inferenceData
+    properties:
+      learningType:
+        type: string
+        example: 'Classification or Regression'
+      datasetType:
+        type: string
+        example: 'Tabular or Text'
+      inferenceData:
+        type: object
+      numberofFeatures:
+        type: integer
+        example: 0
+
+  AdditionalParams:
+    description: Additional Parameters
+    type: object
+    properties:
+      targetNames:
+        description: Target Names
+        type: array
+        items:
+          type: string
+      labels:
+        description: Labels
+        type: array
+        items:
+          type: integer
+      modelInterpretKValue:
+        description: Model Interpret K Value
+        type: integer
+      modelInterpretTopValue:
+        description: Model Interpret Top Value
+        type: integer
+      threshold:
+        description: Threshold Fraction
+        type: number
+      numberClass:
+        description: No of classes
+        type: integer
+      samplingFraction:
+        description: Sampling Fraction
+        type: number
+      samplingLimit:
+        description: Sampling Limit
+        type: integer
+
+
+  ### ###  ########################  ### ###
+  ### ###  ###      Healthz     ###  ### ###
+  ### ###  ########################  ### ###
+  HealthStatus:
+    type: object
+    properties:
+      status:
+        type: string
+        enum:
+          - READY
+          - NOT READY
+      message:
+        type: string
+
+  ### ###  ########################  ### ###
+  ### ###  ###      Healthz     ###  ### ###
+  ### ###  ########################  ### ###
+  CreateReportStatus:
+    type: object
+    properties:
+      status:
+        type: string
+      message:
+        type: string
+
+  ### ###  ########################  ### ###
+  ### ###  ###       Error      ###  ### ###
+  ### ###  ########################  ### ###
+  ExplainableAIApiError:
+    type: object
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        description: Descriptive error code (not http status code). Structure - AABBCCCC. AA - component code (02 for Explainable AI api). BB - subcomponent / category code specific to the main component. CCCC - specific error code within the category.
+        example: '02010055'
+      message:
+        type: string
+        description: plaintext error description
+        example: 'Run was not found.'
+      requestId:
+        type: string
+        description: id of individual request
+        example: '9832bf934f3743v3948v3'
+      target:
+        type: string
+        description: url that has been called
+        example: '/runs'
+      details:
+        type: array
+        items:
+          $ref: '#/definitions/DetailsErrorResponse'
+
+  DetailsErrorResponse:
+    type: object
+    properties:
+      code:
+        type: string
+        description: Descriptive error code (not http status code)
+        example: '9827389374'
+      message:
+        type: string
+        description: Plaintext error description
+        example: 'Empty result set.'
+
+
+### ***  *****************************************************  *** ###
+### ***  ***              Start of responses               ***  *** ###
+### ***  *****************************************************  *** ###
+responses:
+
+  NotFound:
+    description: The specified resource was not found
+    schema:
+      type: object
+      properties:
+        error:
+          allOf:
+            - $ref: '#/definitions/ExplainableAIApiError'
+            - example:
+                code: "02010003"
+                message: "Resource was not found."
+                requestId: "9832bf934f3743v3948v3"
+                target: "/url/path"
+                details:
+                  - code: "02000003"
+                    message: "Optional nested error message."
+
+  BadRequest:
+    description: The specification of the resource was incorrect
+    schema:
+      type: object
+      properties:
+        error:
+          allOf:
+            - $ref: '#/definitions/ExplainableAIApiError'
+            - example:
+                code: "02000002"
+                message: "Bad request encountered. Please correct it and try again."
+                requestId: "9832bf934f3743v45648t4"
+                target: "/url/path"
+                details:
+                  - code: "02000002"
+                    message: "Optional nested error message."
+
+  Forbidden:
+    description: The access to resource is permanently forbidden
+    schema:
+      type: object
+      properties:
+        error:
+          allOf:
+            - $ref: '#/definitions/ExplainableAIApiError'
+            - example:
+                code: "02000006"
+                message: "You do not have permission to access this resource."
+                requestId: "9832bf934f3743v45648t4"
+                target: "/url/path"
+                details:
+                  - code: "02000006"
+                    message: "Optional nested error message."
+
+  InternalServerError:
+    description: Internal server error
+    schema:
+      type: object
+      properties:
+        error:
+          allOf:
+            - $ref: '#/definitions/ExplainableAIApiError'
+            - example:
+                code: "02000001"
+                message: "A server error has occured. Please try again."
+                requestId: "9832bf934f3743v45648t4"
+                target: "/url/path"
+                details:
+                  - code: "02000001"
+                    message: "Optional nested error message."
