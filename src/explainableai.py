@@ -149,6 +149,7 @@ class ExplainableAI:
         self.predictFn = clf_fn
         self.X_train = X_train
         self.y_train = y_train
+        isGenerateExplainerEnabled = True
         if isGenerateExplainerEnabled == True:
             json_config = 'basic-report-explainable.json'
             controller = Controller(config=Configuration(json_config, locals()))
@@ -358,5 +359,5 @@ class ExplainableAI:
 
 explainableAI = ExplainableAI()
 
-# if __name__ == '__main__':
-# generate_explanation()
+if __name__ == '__main__':
+    explainableAI.train_data(True)
