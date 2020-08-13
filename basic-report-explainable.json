@@ -32,7 +32,7 @@
             "module": "compiler",
             "class": "ModelAgnosticExplainer",
             "attr": {
-              "predict_func": "func.pkl",
+              "predict_func": "var:clf_fn",
               "train_data": "train_data.csv",
               "feature_meta": "feature_meta.json",
               "method": "lime",
