@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: argo-explainable-template-
+  namespace: argo-workflow-examples
+spec:
+  entrypoint: mnist-training
+  arguments:
+    parameters:
+    - name: training-epochs
+      value: will be overwritten
+  artifactRepositoryRef:
+    key: argo-mnist-template # must be templated outside of argo if made dynamic
+  templates:
+  - name: mnist-training
+    steps:
+    - - name: preprocess-inputs
+        template: preprocess-inputs
+    - - name: train-model
+        template: train-model
+        arguments:
+          artifacts:
+          - name: train-pickle
+            from: "{{steps.preprocess-inputs.outputs.artifacts.train-pickle}}"
+    - - name: generate-explainations
+        template: generate-explainations
+        arguments:
+          artifacts:
+          - name: train-pickle
+            from: "{{steps.preprocess-inputs.outputs.artifacts.train-pickle}}"
+          - name: model-pickle
+            from: "{{steps.train-model.outputs.artifacts.model-pickle}}"
+          - name: predictfunc-pickle
+            from: "{{steps.train-model.outputs.artifacts.predictfunc-pickle}}"
+
+
+  - name: preprocess-inputs
+    container:
+      image: mpramodh1/explanabilty:0.1.3
+      command: [sh, -c]
+      args: 
+      - >
+        echo "preprocess:";
+        python /training/steps/preprocess_data.py;
+    outputs:
+      artifacts:
+      - name: train-pickle
+        path: /training/output/train.pickle
+
+  - name: train-model
+    container:
+      image: mpramodh1/explanabilty:0.1.3
+      command: [sh, -c]
+      args: 
+      - >
+        echo "training:";
+        python /training/steps/training.py;
+      env:
+      - name: NUMBER_OF_EPOCHS
+        value: "{{workflow.parameters.training-epochs}}"
+    inputs:
+      artifacts:
+      - name: train-pickle
+        path: /training/input/train.pickle
+    outputs:
+      artifacts:
+      - name: model-pickle
+        path: /training/output/model.pickle
+      - name: predictfunc-pickle
+        path: /training/output/func.pickle
+
+  - name: generate-explainations
+    container:
+      image: mpramodh1/explanabilty:0.1.3
+      command: [sh, -c]
+      workingDir: /training
+      args: 
+      - >
+        echo "testing a:";
+        python /training/steps/explanability.py;
+        ls;
+    inputs:
+      artifacts:
+      - name: train-pickle
+        path: /training/input/train.pickle
+      - name: model-pickle
+        path: /training/input/model.pickle
+      - name: predictfunc-pickle
+        path: /training/input/func.pickle

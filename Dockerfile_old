@@ -1,0 +1,32 @@
+FROM opensuse/leap:15.0
+
+RUN zypper --non-interactive update && \
+    # Install python, python3, pip, pip3, gcc and libthread
+    zypper --non-interactive install --no-recommends --force-resolution \
+    python=2.7.14 \
+    python2-pip \
+    python3 \
+    python3-pip \
+    gcc=7 \
+    gcc-c++=7 \
+    libgthread-2_0-0=2.54.3 && \
+    # Install tornado
+    pip2 --no-cache install --user tornado==5.0.2 && \
+    pip3 --no-cache install --user tornado==5.0.2
+    
+FROM python:3.6
+
+RUN python3.6 -m pip install --no-cache-dir 'tornado==5.0.2' 'pyyaml==5.1.2' 'jsonschema==3.0.2' 'plotly==4.3.0' contextual-ai
+
+RUN mkdir training
+
+COPY steps /training/steps
+
+COPY src /training/src
+
+
+COPY german_credit_data.csv /training/german_credit_data.csv
+COPY feature_meta.json /training/feature_meta.json
+COPY basic-report-explainable.json /training/basic-report-explainable.json
+
+WORKDIR /training
