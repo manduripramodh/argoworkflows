@@ -1,17 +1,28 @@
 import pickle
-import tensorflow as tf
+from xai.compiler.base import Configuration, Controller
 import os
+from pprint import pprint
+import numpy as np
 
-root_path='/training'
+np.random.seed(123456)
+
+root_path = '/training'
 
 if __name__ == '__main__':
-  path = '{}/input_data/mnist.npz'.format(root_path)
-  print(path)
-  (train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data(path)
+    pprint("Entered explainer step")
+    with open('{}/input/train.pickle'.format(root_path), 'rb') as f:
+        X_train, y_train = pickle.load(f)
 
-  os.makedirs('{}/output/'.format(root_path), exist_ok=True)
-  with open('{}/output/train.pickle'.format(root_path), 'wb') as f:
-      pickle.dump([train_images, train_labels], f)
+    with open('{}/input/model.pickle'.format(root_path), 'rb') as f:
+        clf = pickle.load(f)
 
-  with open('{}/output/test.pickle'.format(root_path), 'wb') as f:
-      pickle.dump([test_images, test_labels], f)
+    with open('{}/input/func.pickle'.format(root_path), 'rb') as f:
+        clf_fn = pickle.load(f)
+
+    feature_names = X_train.columns.tolist()
+    target_names_list = ['good', 'bad']
+    json_config = 'basic-report-explainable.json'
+    controller = Controller(config=Configuration(json_config, locals()))
+    pprint(controller.config)
+    controller.render()
+    pprint("Compleyed explainer step")
