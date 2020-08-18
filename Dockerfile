@@ -17,3 +17,16 @@ RUN zypper --non-interactive update && \
 FROM python:3.6
 
 RUN python3.6 -m pip install --no-cache-dir 'tornado==5.0.2' 'pyyaml==5.1.2' 'jsonschema==3.0.2' 'plotly==4.3.0' contextual-ai
+
+RUN mkdir training
+
+COPY steps /training/steps
+
+COPY src /training/src
+
+
+COPY german_credit_data.csv /training/german_credit_data.csv
+COPY feature_meta.json /training/feature_meta.json
+COPY basic-report-explainable.json /training/basic-report-explainable.json
+
+WORKDIR /training
